@@ -1,0 +1,81 @@
+/* Ashish's Note: This file contains all the style overrides to activate Dark Mode */
+
+.dark-mode {
+  /* Ashish's Note: Base dark theme settings */
+  background: #1e1e1e !important; /* Very dark background */
+  color: #f1f1f1 !important; /* Light text */
+}
+
+.dark-mode header, .dark-mode footer {
+  background-color: #333333 !important;
+  border-top-color: #004d40 !important; /* Subtle accent color */
+}
+
+.dark-mode .container, .dark-mode .dashboard {
+  background: #252525 !important;
+  border: 1px solid #444 !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5) !important;
+}
+
+.dark-mode p {
+  color: #aaaaaa !important;
+}
+
+/* --- Card Styles --- */
+.dark-mode .card {
+  background: #333333 !important;
+  color: #f1f1f1 !important;
+  border-color: #444444 !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4) !important;
+}
+
+.dark-mode .card:hover {
+  background: #004d40 !important; /* Dark teal accent on hover */
+  transform: scale(1.03);
+}
+
+/* --- Routing/POI Page Styles (Sidebar & Controls) --- */
+.dark-mode .sidebar {
+  background-color: #252525 !important;
+  border-right-color: #444444 !important;
+}
+
+.dark-mode #routeInfo, 
+.dark-mode #directions,
+.dark-mode #poiList {
+  background-color: #252525 !important;
+  color: #f1f1f1 !important;
+}
+
+.dark-mode .controls input,
+.dark-mode .controls select {
+  background-color: #333333 !important;
+  color: #f1f1f1 !important;
+  border-color: #555 !important;
+}
+
+.dark-mode .controls ul.suggestions {
+  background-color: #333333 !important;
+  border-color: #555 !important;
+}
+
+.dark-mode .controls ul.suggestions li {
+  color: #f1f1f1 !important;
+}
+
+.dark-mode .controls ul.suggestions li:hover {
+  background-color: #444444 !important;
+}
+
+.dark-mode #map {
+  border: 1px solid #444 !important;
+}
+
+.dark-mode .theme-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+}

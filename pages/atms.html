@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Smart ATM Finder - Surat</title>
+  
+  <!-- Ashish's Note: Corrected CSS path -->
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  
+  <style>
+    /* Ashish's Note: Adopting the two-column layout for better usability and result display */
+    body {
+      display: flex;
+      flex-direction: column;
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      height: 100vh;
+      overflow: hidden; /* Prevents full-page scroll */
+    }
+
+    header {
+      flex-shrink: 0; /* Header should not shrink */
+    }
+
+    main {
+      display: flex;
+      flex: 1; /* Main content takes remaining height */
+      overflow: hidden; /* Prevents main from overflowing */
+    }
+
+    .sidebar {
+      width: 320px; /* Fixed width sidebar */
+      padding: 1.5rem;
+      background-color: #ffffff;
+      border-right: 1px solid #e5e7eb;
+      overflow-y: auto; /* Allow sidebar to scroll */
+      z-index: 10;
+      flex-shrink: 0;
+    }
+    
+    .sidebar h2 {
+      margin-top: 0;
+    }
+
+    #map {
+      flex: 1; /* Map takes remaining width */
+      height: 100%;
+    }
+
+    /* List styling for the ranked results */
+    #atmList {
+      list-style: none;
+      padding: 0;
+      margin-top: 15px;
+    }
+
+    #atmList li {
+      background: #f9f9f9;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      border-left: 4px solid #007bff; /* Accent color */
+      cursor: pointer;
+      transition: background 0.2s, box-shadow 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    #atmList li:hover {
+      background: #f0f0f0;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    #atmList strong {
+        display: block;
+        font-size: 1.1em;
+        margin-bottom: 2px;
+        color: #333;
+    }
+    
+    #atmList small {
+        color: #555;
+    }
+    
+    #atmList .eta {
+        font-weight: 700;
+        color: #28a745;
+    }
+    
+    #loadingStatus {
+        color: #555;
+    }
+
+    /* Ashish's Note: Responsive behavior for mobile view */
+    @media (max-width: 768px) {
+      main {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        height: 50vh; /* Sidebar takes top 50% */
+        border-right: none;
+        border-bottom: 1px solid #ccc;
+      }
+      #map {
+        height: 50vh; /* Map takes bottom 50% */
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <!-- 
+      Ashish's Note: FIXED a critical bug. 
+      Changed the 'src' path from 'D:\...' to a relative path.
+    -->
+    <img src="../assets/ATM-Logo.png" alt="Logo" class="logo"/>
+    <h1>Smart ATM Finder - Surat</h1>
+  </header>
+
+  <main>
+    <div class="sidebar">
+        <h2>ATM Results</h2>
+        <p style="font-size: 0.9rem; color: #555;">Sorted by <strong style="color: #28a745;">Quickest Travel Time (AI)</strong>.</p>
+        <div id="loadingStatus">Loading nearby ATMs and calculating fastest routes...</div>
+        <ul id="atmList">
+            <!-- Results will be inserted here by js/atms.js -->
+        </ul>
+    </div>
+    <div id="map"></div>
+  </main>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  
+  <!-- 
+    Ashish's Note: Script loading order is CRITICAL.
+    1. Load config.js (so the API key is globally available).
+    2. Load atms.js (which uses the key).
+    REMOVED type="module" to prevent import/export errors.
+  -->
+  <script src="../config.js"></script>
+  <script src="../js/atms.js"></script>
+</body>
+</html>
+

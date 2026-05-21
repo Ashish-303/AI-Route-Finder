@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PPSU Route Finder</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+  <style>
+    :root {
+      --sidebar-width: 320px;
+      --header-height: 90px;
+    }
+    html,body {
+      height: 100%;
+      margin: 0;
+      font-family: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial;
+      background: #f5f7fa;
+    }
+    header {
+      height: var(--header-height);
+      background: #2f4650;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0 1.5rem;
+      box-sizing: border-box;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      z-index: 20;
+    }
+    header img.logo { height: 56px; width: auto; display:block; }
+    header h1 { font-size: 1.5rem; margin: 0; }
+
+    main {
+      display: flex;
+      height: calc(100% - var(--header-height));
+      min-height: 400px;
+    }
+
+    .sidebar {
+      width: var(--sidebar-width);
+      padding: 1.5rem;
+      background: #fff;
+      border-right: 1px solid #e6e9ee;
+      box-sizing: border-box;
+      overflow-y: auto;
+    }
+
+    .sidebar h2 { margin-top: 0; margin-bottom: .5rem; }
+    .sidebar h3 { margin-top: 1.25rem; margin-bottom: .5rem; font-size: 1rem; border-bottom: 1px solid #eee; padding-bottom: .35rem; }
+
+    #map {
+      flex: 1;
+      height: 100%;
+      min-height: 300px;
+    }
+
+    #directions { margin-top: 1rem; font-size: .95rem; color: #333; }
+    #directions ol { padding-left: 18px; }
+    #directions li { margin-bottom: 10px; line-height: 1.4; }
+
+    .muted { color: #666; font-size: .95rem; }
+    .tag { display:inline-block; padding: .15rem .5rem; border-radius: 6px; background:#eef5ff; color:#0b62d6; font-weight:600; font-size:.85rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="../assets/P_P_Savani_University_logo.png" alt="PPSU logo" class="logo" />
+    <h1>Route to P P Savani University</h1>
+  </header>
+
+  <main>
+    <aside class="sidebar">
+      <h2>Route Details</h2>
+      <p><strong>Source:</strong> Click your starting location on the map.</p>
+      <p><strong>Destination:</strong> P.P. Savani University</p>
+
+      <h3>AI Route Summary</h3>
+      <p><strong>Distance:</strong> <span id="distance">--</span></p>
+      <p><strong>Time (AI Optimized):</strong> <span id="duration">--</span></p>
+
+      <div id="directions">
+        <p class="muted">Click on the map to start your journey. Turn-by-turn directions will appear here.</p>
+      </div>
+    </aside>
+
+    <div id="map"></div>
+  </main>
+
+  <!-- Leaflet JS (load before our module) -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <!-- Main app as an ES module (self-contained: contains config + logic) -->
+  <script type="module">
+    // -------------------------
+    // Configuration (edit here)
+    // -------------------------
+    // Ashish's Note: I've inserted your new API key here.
+    const ORS_API_KEY = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjYwYzJjNzdhOGY0ZjQyYmUzMmY3ZWQxM2NjZTJhYzU5MGI1NzNjY2I3OTAyMGZjMWExMmI5NWE2IiwiaCI6Im11cm11cjY0In0=";
+
+    // Sample congestion zones for Surat (center: [lat, lng])
+    // radiusKm: radius in kilometers, penalty: multiplier >1 to increase travel time
+    const SURAT_CONGESTION_ZONES = [
+      { name: "Athwa", center: [21.1702, 72.8311], radiusKm: 1.2, penalty: 1.25 },
+      { name: "Varachha", center: [21.2186, 72.8397], radiusKm: 1.0, penalty: 1.2 },
+      { name: "Ghod Dod", center: [21.1951, 72.8198], radiusKm: 0.9, penalty: 1.15 }
+    ];
+
+    // -------------------------
+    // Map Initialization
+    // -------------------------
+    // PPSU coords (latitude, longitude) - human friendly
+    const ppsuLatLng = [21.4872, 73.0791];
+
+    // Create map and tile layer
+    const map = L.map('map').setView(ppsuLatLng, 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: 'Map data © OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Destination marker
+    L.marker(ppsuLatLng).addTo(map).bindPopup("P P Savani University (Destination)").openPopup();
+
+    // UI references
+    const directionsDiv = document.getElementById('directions');
+    const distanceSpan = document.getElementById('distance');
+    const durationSpan = document.getElementById('duration');
+
+    let routeLayer = null;
+    let startMarker = null;
+
+    // -------------------------
+    // Utilities
+    // -------------------------
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * (Math.PI / 180);
+      const dLon = (lon2 - lon1) * (Math.PI / 180);
+      const a = Math.sin(dLat / 2) ** 2 +
+              Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+              Math.sin(dLon / 2) ** 2;
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    }
+
+    function isPointInCongestionZone(lat, lng) {
+      for (const zone of SURAT_CONGESTION_ZONES) {
+        const zoneLat = zone.center[0];
+        const zoneLng = zone.center[1];
+        const dist = calculateDistance(lat, lng, zoneLat, zoneLng);
+        if (dist <= zone.radiusKm) {
+          return { isCongested: true, penalty: zone.penalty, name: zone.name };
+        }
+      }
+      return { isCongested: false, penalty: 1.0, name: '' };
+    }
+
+    // AI scoring function (keeps your original logic but robust to missing data)
+    function calculateCustomRouteScore(routeFeature, vehicleType = 'driving-car') {
+      if (!routeFeature || !routeFeature.properties || !routeFeature.geometry) {
+        return { finalScore: Infinity, isCongested: false, zoneName: '' };
+      }
+
+      const baseDuration = routeFeature.properties.summary?.duration || 0; // seconds
+      const coordinates = routeFeature.geometry.coordinates || [];
+      const numTurns = routeFeature.properties.segments?.[0]?.steps?.length || 0;
+
+      const segmentBaseDuration = coordinates.length > 0 ? (baseDuration / coordinates.length) : 0;
+      let totalWeightedDuration = 0;
+      let congestionDetails = { isCongested: false, penalty: 1.0, name: '' };
+
+      for (let i = 0; i < Math.max(1, coordinates.length - 1); i++) {
+        const [lng, lat] = coordinates[i];
+        let segmentPenalty = 1.0;
+        const congestion = isPointInCongestionZone(lat, lng);
+
+        if (congestion.isCongested) {
+          if (!congestionDetails.isCongested || congestion.penalty > congestionDetails.penalty) {
+            congestionDetails = congestion;
+          }
+          segmentPenalty *= congestion.penalty;
+          if (vehicleType === 'driving-two-wheeler') segmentPenalty *= 0.9;
+        }
+        totalWeightedDuration += segmentBaseDuration * segmentPenalty;
+      }
+
+      const heuristicPenalty = numTurns * 15; // 15 seconds per turn
+      const finalScore = totalWeightedDuration + heuristicPenalty;
+
+      return { finalScore, isCongested: congestionDetails.isCongested, zoneName: congestionDetails.name };
+    }
+
+    // -------------------------
+    // Map click -> request ORS -> show best route
+    // -------------------------
+    map.on('click', async (e) => {
+      const startLatLng = e.latlng;
+      const startCoords = [startLatLng.lng, startLatLng.lat]; // ORS expects [lng, lat]
+      const endCoords = [ppsuLatLng[1], ppsuLatLng[0]];        // convert [lat,lng] -> [lng,lat]
+
+      // show start marker
+      if (startMarker) map.removeLayer(startMarker);
+      startMarker = L.marker(startLatLng).addTo(map).bindPopup("Your Start Location").openPopup();
+
+      if (routeLayer) {
+        map.removeLayer(routeLayer);
+        routeLayer = null;
+      }
+
+      if (!ORS_API_KEY || ORS_API_KEY.includes("YOUR_")) {
+        directionsDiv.innerHTML = '<p style="color:red; font-weight:bold;">Please set your ORS API key in the top of this page.</p>';
+        return;
+      }
+
+      directionsDiv.innerHTML = '<p style="color:#2c5282; font-weight:bold;">Calculating Smart Route...</p>';
+
+      // modern ORS expects alternative_routes object (not "options.alternatives")
+      const payload = {
+        coordinates: [startCoords, endCoords],
+        instructions: true,
+        alternative_routes: {
+          target_count: 2,
+          share_factor: 0.6
+        }
+      };
+
+      const url = 'https://api.openrouteservice.org/v2/directions/driving-car/geojson';
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': ORS_API_KEY
+      };
+
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          // attempt to show useful error from ORS
+          let errMsg = `ORS Routing failed (HTTP ${res.status}).`;
+          try {
+            const errJson = await res.json();
+            if (errJson?.error?.message) errMsg = `ORS Error: ${errJson.error.message}`;
+          } catch (parseErr) { /* ignore parse */ }
+          throw new Error(errMsg);
+        }
+
+        const data = await res.json();
+
+        if (!data.features || data.features.length === 0) {
+          throw new Error('No routes returned by ORS for these coordinates.');
+        }
+
+        let bestRoute = null;
+        let bestScore = Infinity;
+        let routeWarning = '';
+
+        data.features.forEach(feature => {
+          const { finalScore, isCongested, zoneName } = calculateCustomRouteScore(feature, 'driving-car');
+          if (finalScore < bestScore) {
+            bestScore = finalScore;
+            bestRoute = feature;
+            routeWarning = isCongested ? `⚠️ Route passes near ${zoneName}.` : '✅ Clear of major congestion.';
+          }
+        });
+
+        if (!bestRoute) throw new Error('No selectable route found.');
+
+        // draw route
+        routeLayer = L.geoJSON(bestRoute, { style: { color: '#28a745', weight: 6 } }).addTo(map);
+        map.fitBounds(routeLayer.getBounds(), { padding: [40, 40] });
+
+        // update sidebar info
+        const summary = bestRoute.properties.summary || { distance: 0, duration: 0 };
+        const distKm = (summary.distance / 1000).toFixed(2);
+        const durMin = (bestScore / 60).toFixed(2);
+
+        distanceSpan.textContent = `${distKm} km`;
+        durationSpan.textContent = `${durMin} minutes`;
+
+        // build turn-by-turn list
+        const steps = bestRoute.properties.segments?.[0]?.steps || [];
+        let html = `<h3 class="muted">Smart Route Details</h3>
+                     <p><span class="tag">AI</span> <strong> ${routeWarning}</strong></p>
+                     <p><strong>Distance:</strong> ${distKm} km</p>
+                     <p><strong>Time (AI Optimized):</strong> ${durMin} minutes</p>
+                     <h3>Turn-by-Turn Directions:</h3>
+                     <ol>`;
+
+        if (steps.length === 0) html += `<li>No step-by-step instructions available.</li>`;
+        else {
+          steps.forEach(step => {
+            const stepDistanceKm = (step.distance / 1000).toFixed(2);
+            html += `<li>${step.instruction} <small class="muted">(${stepDistanceKm} km)</small></li>`;
+          });
+        }
+        html += '</ol>';
+        directionsDiv.innerHTML = html;
+
+      } catch (err) {
+        console.error('Routing error:', err);
+        directionsDiv.innerHTML = `<p style="color:red; font-weight:bold;">Failed to get directions: ${err.message}</p>`;
+      }
+    });
+
+    // Optional: add locate control for convenience
+    L.control.scale({ position: 'bottomleft' }).addTo(map);
+  </script>
+</body>
+</html>
+

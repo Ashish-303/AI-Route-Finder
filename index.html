@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart AI Route Finder</title>
+  
+  <!-- Ashish's Note: Corrected CSS paths -->
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/dark-mode.css" /> 
+  
+  <link rel="icon" href="assets/AI route logo.png" /> 
+</head>
+<body>
+  <div class="container">
+    <header>
+      <!-- 
+        Ashish's Note: FIXED a critical bug. 
+        Changed the 'src' path from 'D:\...' to a relative path.
+      -->
+      <img src="assets/AI route logo.png" alt="App Logo" class="logo" />
+      <h1>Smart AI Route Finder</h1>
+      <p>Select a feature to get started</p>
+      
+      <!-- 
+        Ashish's Note: THIS IS THE NEW BUTTON 
+        Added the theme toggle button here. 
+        The onclick attribute calls the function from js/theme.js
+      -->
+      <button id="theme-toggle-button" onclick="toggleTheme()">
+        Toggle Theme
+      </button>
+      
+    </header>
+
+    <main class="card-container">
+      <a href="pages/route.html" class="card">Route Finder</a>
+      <a href="pages/pps-route.html" class="card">Route to PP Savani University</a>
+      <a href="pages/restaurants.html" class="card">Nearby Restaurants</a>
+      <a href="pages/atms.html" class="card">Find Nearest ATMs</a>
+      <a href="pages/theatres.html" class="card">Theatres Near You</a>
+      <a href="pages/safety.html" class="card">Emergency Safety Mode</a>
+      <a href="pages/weather.html" class="card">Check Weather &amp; AQI</a>
+    </main>
+
+    <section class="dashboard">
+        <h2>Dashboard</h2>
+        <div class="stats">
+          <div class="card"><strong>Today:</strong> <span id="todayCount">0</span></div>
+          <div class="card"><strong>This Week:</strong> <span id="weekCount">0</span></div>
+          <div class="card"><strong>This Month:</strong> <span id="monthCount">0</span></div>
+        </div>
+        <canvas id="visitPieChart" width="200" height="200"></canvas>
+    </section>
+
+    <footer>
+      <p>Smart AI Route Finder. Made by PPSU Students.</p>
+    </footer>
+  </div>
+
+  <!-- Ashish's Note: Mobile view popup (from your original file) -->
+  <div id="mobilePopup" class="popup-overlay" style="display: none;">
+    <div class="popup-box">
+      <p>Are you visiting on a mobile device?</p>
+      <button onclick="enableMobileView()">Yes</button>
+      <button onclick="closePopup()">No</button>
+    </div>
+  </div>
+
+  <!-- Ashish's Note: Load Chart.js for the dashboard pie chart -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Ashish's Note: visitor.js handles the dashboard stats -->
+  <script src="./js/visitor.js"></script>
+  <!-- Ashish's Note: theme.js handles mobile popups and dark mode -->
+  <script src="./js/theme.js"></script>
+
+</body>
+</html>
+

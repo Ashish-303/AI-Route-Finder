@@ -1,0 +1,65 @@
+{
+"type": "FeatureCollection",
+"features": [
+{
+"type": "Feature",
+"properties": {
+"name": "Old City / Chowk Bazaar Area",
+"risk": "High - Crime",
+"notes": "Ashish's Note: Simulated high-risk zone for demonstration. Based on high-density/congestion."
+},
+"geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[72.8250, 21.1900],
+[72.8350, 21.1900],
+[72.8350, 21.1980],
+[72.8250, 21.1980],
+[72.8250, 21.1900]
+]
+]
+}
+},
+{
+"type": "Feature",
+"properties": {
+"name": "Udhna Waterlogging Zone",
+"risk": "High - Waterlogging",
+"notes": "Ashish's Note: Simulated risk zone for areas prone to flooding during monsoon."
+},
+"geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[72.8400, 21.1600],
+[72.8500, 21.1600],
+[72.8500, 21.1650],
+[72.8400, 21.1650],
+[72.8400, 21.1600]
+]
+]
+}
+},
+{
+"type": "Feature",
+"properties": {
+"name": "Majura Gate Intersection",
+"risk": "High - Accident Prone",
+"notes": "Ashish's Note: Simulated high-traffic/accident risk zone."
+},
+"geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[72.8000, 21.1830],
+[72.8050, 21.1830],
+[72.8050, 21.1870],
+[72.8000, 21.1870],
+[72.8000, 21.1830]
+]
+]
+}
+}
+]
+}

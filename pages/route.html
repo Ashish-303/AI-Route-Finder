@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart AI Route Finder</title>
+  
+  <!-- Ashish's Note: Corrected CSS path to go up one level (../) -->
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  
+  <style>
+    /* Ashish's Note: This inline style is for page-specific layout */
+    body {
+      display: flex;
+      flex-direction: column;
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      height: 100vh; /* Full viewport height */
+      overflow: hidden; /* Prevent body scroll */
+    }
+
+    header {
+      /* Ashish's Note: The header style is now in style.css */
+      flex-shrink: 0; /* Prevent header from shrinking */
+    }
+
+    main {
+      display: flex;
+      flex: 1; /* Main content takes remaining height */
+      overflow: hidden; /* Prevent main from overflowing */
+    }
+
+    .sidebar {
+      width: 320px;
+      padding: 1.5rem;
+      background-color: #ffffff;
+      border-right: 1px solid #e5e7eb;
+      overflow-y: auto; /* Allow sidebar to scroll if content is tall */
+      z-index: 10;
+    }
+
+    .sidebar h2 {
+      margin-top: 0;
+      font-size: 1.25rem;
+      color: #111827;
+    }
+
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      position: relative; /* For the suggestions dropdown */
+    }
+
+    /* Ashish's Note: This is the FIX for the suggestion list not appearing. */
+    .suggestions {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      border: 1px solid #d1d5db;
+      border-top: none;
+      border-radius: 0 0 0.5rem 0.5rem;
+      background: #ffffff;
+      position: absolute;
+      width: 100%;
+      top: 100%; /* Position below the relevant input */
+      z-index: 1000; /* Must be high to appear over the map */
+      display: none; /* Hidden by default, shown by JS */
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Ashish's Note: Need to position each suggestion list correctly */
+    #startSuggestions {
+        top: 40px; /* Position below the 'start' input */
+    }
+    #endSuggestions {
+        top: 96px; /* Position below the 'end' input */
+    }
+
+    .suggestions li {
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    .suggestions li:hover {
+      background-color: #f3f4f6;
+    }
+
+    #routeInfo {
+      margin-top: 1.5rem;
+      font-size: 0.9rem;
+      border-top: 1px solid #e5e7eb;
+      padding-top: 1.5rem;
+    }
+
+    #map {
+      flex: 1; /* Map takes all remaining space */
+      height: 100%; /* Fill the main content area's height */
+    }
+
+    footer {
+      display: none; /* Footer is hidden on two-column layout for more space */
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <!-- 
+      Ashish's Note: FIXED a critical bug. 
+      Changed the 'src' path from 'D:\...' to a relative path.
+      '../' means 'go up one folder' from 'pages' to the root.
+    -->
+    <img src="../assets/Route-Logo.png" class="logo" alt="Route Logo" />
+    <h1>Smart AI Route Finder</h1>
+  </header>
+
+  <main>
+    <div class="sidebar">
+      <h2>Controls</h2>
+      <div class="controls">
+        <input type="text" id="start" placeholder="Start Location (e.g., Varachha)" autocomplete="off" />
+        <ul id="startSuggestions" class="suggestions"></ul>
+
+        <input type="text" id="end" placeholder="End Location (e.g., Dumas)" autocomplete="off" />
+        <ul id="endSuggestions" class="suggestions"></ul>
+
+        <!-- Ashish's Note: This dropdown feeds the AI logic -->
+        <select id="vehicleType">
+          <option value="driving-car">Car Route (AI Optimized)</option>
+          <option value="driving-two-wheeler">Two-Wheeler Route (Smart AI)</option>
+        </select>
+
+        <button id="findRoute">Find Route</button>
+
+        <div id="routeInfo">
+          <p><strong>Distance:</strong> <span id="distance">--</span></p>
+          <p><strong>Time:</strong> <span id="duration">--</span></p>
+        </div>
+      </div>
+    </div>
+    <div id="map"></div>
+  </main>
+
+  <!-- 
+    Ashish's Note: Script loading order is CRITICAL.
+    1. Load Leaflet (the map library).
+    2. Load config.js (so the API key is globally available).
+    3. Load route.js (which uses the key and map library).
+  -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="../config.js"></script>
+  <script src="../js/route.js"></script>
+</body>
+</html>
+
