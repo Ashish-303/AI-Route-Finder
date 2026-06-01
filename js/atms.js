@@ -58,7 +58,7 @@ if ("geolocation" in navigator) {
 async function findNearbyATMs(lat, lng) {
   showMessage("Searching for nearby ATMs...");
 
-  const overpassUrl = `https://overpass-api.de/api/interpreter?data=[out:json];node(around:2000,${lat},${lng})[amenity=atm];out;`;
+  const overpassUrl = `https://overpass.openstreetmap.fr/api/interpreter?data=[out:json];node(around:2000,${lat},${lng})[amenity=atm];out;`;
 
   try {
     const response = await fetch(overpassUrl);

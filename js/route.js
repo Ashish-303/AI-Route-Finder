@@ -127,7 +127,9 @@ if (findRouteButton) {
     }
     
     const vehicleType = document.getElementById("vehicleType").value; 
-    const orsProfile = vehicleType === 'driving-two-wheeler' ? 'driving-two-wheeler' : 'driving-car';
+    // Ashish's Note: OpenRouteService does not support the 'driving-two-wheeler' profile.
+    // We request 'driving-car' coordinates and apply our own custom scoring/penalty logic for two-wheelers.
+    const orsProfile = 'driving-car';
 
     const url = `https://api.openrouteservice.org/v2/directions/${orsProfile}/geojson`;
     const headers = {

@@ -70,7 +70,7 @@ async function findNearbyEmergency(amenity) {
         (._;>;);
         out center;
     `;
-    const overpassUrl = 'https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(query);
+    const overpassUrl = 'https://overpass.openstreetmap.fr/api/interpreter?data=' + encodeURIComponent(query);
 
     try {
         const res = await fetch(overpassUrl);
