@@ -76,9 +76,37 @@ const OVERPASS_MIRRORS = [
 ];
 
 async function fetchFromOverpass(query) {
+    // If running in production on Vercel, route through our serverless proxy to bypass CORS/Origin blocks!
+    const isLocal = window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    
+    if (!isLocal) {
+        try {
+            console.log("Production detected. Routing request through Vercel Serverless Proxy...");
+            const response = await fetch("/api/overpass", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: "data=" + encodeURIComponent(query)
+            });
+            if (response.ok) {
+                const data = await response.json();
+                if (data && data.elements) {
+                    console.log("Successfully fetched from Vercel Serverless Proxy!");
+                    return data;
+                }
+            } else {
+                console.warn(`Vercel Proxy returned status: ${response.status}`);
+            }
+        } catch (e) {
+            console.warn("Vercel Proxy failed, falling back to direct public mirrors:", e);
+        }
+    }
+
+    // Local development or proxy fallback: query direct public mirrors
     for (const url of OVERPASS_MIRRORS) {
         try {
-            console.log(`Attempting to fetch from Overpass mirror: ${url}`);
+            console.log(`Attempting direct fetch from Overpass mirror: ${url}`);
             const response = await fetch(url, {
                 method: "POST",
                 headers: {
@@ -89,7 +117,7 @@ async function fetchFromOverpass(query) {
             if (response.ok) {
                 const data = await response.json();
                 if (data && data.elements) {
-                    console.log(`Successfully fetched from: ${url}`);
+                    console.log(`Successfully fetched directly from: ${url}`);
                     return data;
                 }
             } else {
@@ -99,7 +127,7 @@ async function fetchFromOverpass(query) {
             console.warn(`Failed to fetch from mirror ${url}:`, e);
         }
     }
-    throw new Error("All Overpass API mirrors failed to respond.");
+    throw new Error("All Overpass API mirrors and proxy failed to respond.");
 }
 
 /**
