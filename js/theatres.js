@@ -69,6 +69,39 @@ function initTheatreMap() {
     }
 }
 
+const OVERPASS_MIRRORS = [
+    "https://overpass-api.de/api/interpreter",
+    "https://overpass.openstreetmap.fr/api/interpreter",
+    "https://overpass.private.coffee/api/interpreter"
+];
+
+async function fetchFromOverpass(query) {
+    for (const url of OVERPASS_MIRRORS) {
+        try {
+            console.log(`Attempting to fetch from Overpass mirror: ${url}`);
+            const response = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: "data=" + encodeURIComponent(query)
+            });
+            if (response.ok) {
+                const data = await response.json();
+                if (data && data.elements) {
+                    console.log(`Successfully fetched from: ${url}`);
+                    return data;
+                }
+            } else {
+                console.warn(`Mirror ${url} returned status: ${response.status}`);
+            }
+        } catch (e) {
+            console.warn(`Failed to fetch from mirror ${url}:`, e);
+        }
+    }
+    throw new Error("All Overpass API mirrors failed to respond.");
+}
+
 /**
  * Ashish's Note: Step 1: Fetches Theatre/Cinema locations using Overpass API.
  * @param {Array} center - [lat, lng] coordinates to center the search.
@@ -92,16 +125,7 @@ async function loadNearbyTheatres(center) {
         out center;
     `;
     try {
-        const res = await fetch('https://overpass.openstreetmap.fr/api/interpreter', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: 'data=' + encodeURIComponent(query)
-        });
-        if (!res.ok) throw new Error(`Overpass API failed (HTTP ${res.status})`);
-        
-        const data = await res.json();
+        const data = await fetchFromOverpass(query);
         
         // Ashish's Note: Filter, map, and remove duplicates by name
         const theatreMap = new Map();

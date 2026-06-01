@@ -52,6 +52,39 @@ if ("geolocation" in navigator) {
   showMessage("Geolocation not supported by your browser.");
 }
 
+const OVERPASS_MIRRORS = [
+  "https://overpass-api.de/api/interpreter",
+  "https://overpass.openstreetmap.fr/api/interpreter",
+  "https://overpass.private.coffee/api/interpreter"
+];
+
+async function fetchFromOverpass(query) {
+  for (const url of OVERPASS_MIRRORS) {
+    try {
+      console.log(`Attempting to fetch from Overpass mirror: ${url}`);
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: "data=" + encodeURIComponent(query)
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.elements) {
+          console.log(`Successfully fetched from: ${url}`);
+          return data;
+        }
+      } else {
+        console.warn(`Mirror ${url} returned status: ${response.status}`);
+      }
+    } catch (e) {
+      console.warn(`Failed to fetch from mirror ${url}:`, e);
+    }
+  }
+  throw new Error("All Overpass API mirrors failed to respond.");
+}
+
 // ============================
 // 1️⃣ Find nearby ATMs using Overpass API
 // ============================
@@ -61,14 +94,7 @@ async function findNearbyATMs(lat, lng) {
   const query = `[out:json];node(around:2000,${lat},${lng})[amenity=atm];out;`;
 
   try {
-    const response = await fetch("https://overpass.openstreetmap.fr/api/interpreter", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded"
-      },
-      body: "data=" + encodeURIComponent(query)
-    });
-    const data = await response.json();
+    const data = await fetchFromOverpass(query);
 
     if (!data.elements || data.elements.length === 0) {
       showMessage("No ATMs found nearby.");
