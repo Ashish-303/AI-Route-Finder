@@ -58,10 +58,16 @@ if ("geolocation" in navigator) {
 async function findNearbyATMs(lat, lng) {
   showMessage("Searching for nearby ATMs...");
 
-  const overpassUrl = `https://overpass.openstreetmap.fr/api/interpreter?data=[out:json];node(around:2000,${lat},${lng})[amenity=atm];out;`;
+  const query = `[out:json];node(around:2000,${lat},${lng})[amenity=atm];out;`;
 
   try {
-    const response = await fetch(overpassUrl);
+    const response = await fetch("https://overpass.openstreetmap.fr/api/interpreter", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: "data=" + encodeURIComponent(query)
+    });
     const data = await response.json();
 
     if (!data.elements || data.elements.length === 0) {

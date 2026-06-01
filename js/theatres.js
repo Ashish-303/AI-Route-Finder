@@ -91,10 +91,14 @@ async function loadNearbyTheatres(center) {
         (._;>;);
         out center;
     `;
-    const overpassUrl = 'https://overpass.openstreetmap.fr/api/interpreter?data=' + encodeURIComponent(query);
-
     try {
-        const res = await fetch(overpassUrl);
+        const res = await fetch('https://overpass.openstreetmap.fr/api/interpreter', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: 'data=' + encodeURIComponent(query)
+        });
         if (!res.ok) throw new Error(`Overpass API failed (HTTP ${res.status})`);
         
         const data = await res.json();
